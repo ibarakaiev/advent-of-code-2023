@@ -6,16 +6,16 @@ defmodule AdventOfCode.Day2 do
       1 ->
         input
         |> common()
-        |> Enum.map(fn {game, set} ->
+        |> Stream.map(fn {game, set} ->
           {game,
            Map.get(set, "red") <= 12 and Map.get(set, "green") <= 13 and
              Map.get(set, "blue") <= 14}
         end)
         # %{"Game 1" => true}
-        |> Enum.filter(fn {_game, possible?} ->
+        |> Stream.filter(fn {_game, possible?} ->
           possible?
         end)
-        |> Enum.flat_map(fn {game, _possible?} ->
+        |> Stream.flat_map(fn {game, _possible?} ->
           Regex.run(~r/\d+/, game)
         end)
         # ["1"]
@@ -26,7 +26,7 @@ defmodule AdventOfCode.Day2 do
       2 ->
         input
         |> common()
-        |> Enum.map(fn {_game, set} ->
+        |> Stream.map(fn {_game, set} ->
           Map.get(set, "red") * Map.get(set, "green") * Map.get(set, "blue")
         end)
         |> Enum.sum()

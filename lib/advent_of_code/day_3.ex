@@ -76,9 +76,7 @@ defmodule AdventOfCode.Day3 do
   """
   defp common(input) do
     lines =
-      input
-      |> String.trim()
-      |> String.split("\n")
+      String.split(input, "\n", trim: true)
 
     line_length = lines |> Enum.at(0) |> String.length()
 

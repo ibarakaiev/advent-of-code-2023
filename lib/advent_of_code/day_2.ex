@@ -35,8 +35,7 @@ defmodule AdventOfCode.Day2 do
 
   defp common(input) do
     input
-    |> String.trim()
-    |> String.split("\n")
+    |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       # Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
       line
@@ -61,8 +60,7 @@ defmodule AdventOfCode.Day2 do
           |> String.split(",")
           |> Stream.map(fn entry ->
             entry
-            |> String.trim()
-            |> String.split(" ")
+            |> String.split(" ", trim: true)
             |> Enum.reverse()
             |> List.to_tuple()
           end)

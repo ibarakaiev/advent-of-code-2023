@@ -3,8 +3,7 @@ defmodule AdventOfCode.Day1 do
 
   def solve(input, opts) do
     input
-    |> String.trim()
-    |> String.split("\n")
+    |> String.split("\n", trim: true)
     |> Stream.map(fn line ->
       case_result =
         case Keyword.get(opts, :part) do

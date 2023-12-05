@@ -74,7 +74,7 @@ defmodule AdventOfCode.Day3 do
     {"...*......, "..35..633.", ".........."}
   ]
   """
-  defp common(input) do
+  def common(input) do
     lines =
       String.split(input, "\n", trim: true)
 

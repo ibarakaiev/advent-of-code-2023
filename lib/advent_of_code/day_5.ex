@@ -27,7 +27,7 @@ defmodule AdventOfCode.Day5 do
 
     seeds
     |> Stream.chunk_every(2)
-    |> Task.async_stream(fn [seed_range_start, seed_range_length] ->
+    |> Stream.map(fn [seed_range_start, seed_range_length] ->
       seed_range_end = seed_range_start + seed_range_length - 1
 
       0..(length(@order) - 2)
@@ -53,7 +53,7 @@ defmodule AdventOfCode.Day5 do
       |> Stream.map(& &1[:start])
       |> Enum.min()
     end)
-    |> Enum.reduce(fn {:ok, min}, acc -> min(min, acc) end)
+    |> Enum.min()
   end
 
   @doc """

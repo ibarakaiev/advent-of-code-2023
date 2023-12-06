@@ -5,10 +5,7 @@ defmodule AdventOfCode.Day6 do
     input
     |> parse(part: 1)
     |> Stream.map(fn {time, distance} ->
-      for i <- 1..(time - 1), (time - i) * i > distance, reduce: 0 do
-        acc ->
-          acc + 1
-      end
+      number_of_ways(time, distance)
     end)
     |> Enum.product()
   end
@@ -16,10 +13,7 @@ defmodule AdventOfCode.Day6 do
   def solve(input, part: 2) do
     {time, distance} = parse(input, part: 2)
 
-    for i <- 1..(time - 1), (time - i) * i > distance, reduce: 0 do
-      acc ->
-        acc + 1
-    end
+    number_of_ways(time, distance)
   end
 
   def parse(input, part: 1) do
@@ -46,5 +40,12 @@ defmodule AdventOfCode.Day6 do
     distance = ~r/\d+/ |> Regex.scan(distance) |> List.flatten() |> Enum.join("") |> String.to_integer()
 
     {time, distance}
+  end
+
+  def number_of_ways(time, distance) do
+    x_1 = (time + :math.sqrt(:math.pow(time, 2) - 4 * distance)) / 2
+    x_2 = (time - :math.sqrt(:math.pow(time, 2) - 4 * distance)) / 2
+
+    trunc(:math.floor(x_1 - 0.0001)) - trunc(:math.ceil(x_2 + 0.0001)) + 1
   end
 end

@@ -22,8 +22,8 @@ defmodule AdventOfCode.Day6 do
       |> String.trim()
       |> String.split("\n")
 
-    times = times |> String.split(" ", trim: true) |> Enum.slice(1..-1) |> Enum.map(&String.to_integer/1)
-    distances = distances |> String.split(" ", trim: true) |> Enum.slice(1..-1) |> Enum.map(&String.to_integer/1)
+    times = ~r/\d+/ |> Regex.scan(times) |> Enum.map(fn [time] -> String.to_integer(time) end)
+    distances = ~r/\d+/ |> Regex.scan(distances) |> Enum.map(fn [time] -> String.to_integer(time) end)
 
     times
     |> Enum.zip(distances)

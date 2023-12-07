@@ -14,4 +14,8 @@ defmodule AdventOfCode.Day7Test do
   test "part 1" do
     assert AdventOfCode.Day7.solve(@input, part: 1) == 6440
   end
+
+  test "part 2" do
+    assert AdventOfCode.Day7.solve(@input, part: 2) == 5905
+  end
 end

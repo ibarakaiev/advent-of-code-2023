@@ -1,20 +1,50 @@
 defmodule AdventOfCode.Day7 do
   @moduledoc false
 
-  @card_strength ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"] |> Enum.with_index() |> Map.new()
-  @kind_strength [:high_card, :one_pair, :two_pair, :three_of_a_kind, :four_of_a_kind, :five_of_a_kind]
-                 |> Enum.with_index()
-                 |> Map.new()
+  def solve(input, opts) do
+    card_strength = opts |> Keyword.get(:part) |> card_order() |> Enum.with_index() |> Map.new()
 
-  def solve(input, part: 1) do
+    kind_strength =
+      [:high_card, :one_pair, :two_pair, :three_of_a_kind, :full_house, :four_of_a_kind, :five_of_a_kind]
+      |> Enum.with_index()
+      |> Map.new()
+
     input
-    |> parse()
-    |> Stream.map(fn {hand, bid} ->
+    |> String.trim()
+    |> String.split()
+    |> Stream.chunk_every(2)
+    |> Stream.map(fn [hand, bid] ->
+      bid = String.to_integer(bid)
+
       graphemes = String.graphemes(hand)
-      frequencies = graphemes |> Enum.frequencies() |> Map.values() |> Enum.sort()
+
+      frequencies =
+        case Keyword.get(opts, :part) do
+          1 ->
+            Enum.frequencies(graphemes)
+
+          2 ->
+            frequencies = Enum.frequencies(graphemes)
+
+            if Map.has_key?(frequencies, "J") and length(Map.keys(frequencies)) > 1 do
+              highest_frequency_card =
+                frequencies
+                |> Enum.reject(fn {card, _frequency} -> card == "J" end)
+                |> Enum.max_by(fn {_card, frequency} -> frequency end)
+                |> elem(0)
+
+              frequencies
+              |> Map.put(highest_frequency_card, frequencies[highest_frequency_card] + frequencies["J"])
+              |> Map.delete("J")
+            else
+              frequencies
+            end
+        end
+
+      frequencies_list = frequencies |> Map.values() |> Enum.sort()
 
       kind =
-        case frequencies do
+        case frequencies_list do
           [1, 1, 1, 1, 1] ->
             :high_card
 
@@ -57,8 +87,8 @@ defmodule AdventOfCode.Day7 do
     #   ...
     # ]
     |> Enum.sort(fn left, right ->
-      left_kind_strength = @kind_strength[elem(left, 1)[:kind]]
-      right_kind_strength = @kind_strength[elem(right, 1)[:kind]]
+      left_kind_strength = kind_strength[elem(left, 1)[:kind]]
+      right_kind_strength = kind_strength[elem(right, 1)[:kind]]
 
       if left_kind_strength != right_kind_strength do
         left_kind_strength < right_kind_strength
@@ -73,25 +103,21 @@ defmodule AdventOfCode.Day7 do
           if left_card == right_card do
             {:cont, nil}
           else
-            {:halt, @card_strength[left_card] <= @card_strength[right_card]}
+            {:halt, card_strength[left_card] <= card_strength[right_card]}
           end
         end)
       end
     end)
     |> Stream.map(&elem(&1, 1)[:bid])
-    |> Enum.with_index(1)
+    |> Stream.with_index(1)
     |> Stream.map(&(elem(&1, 0) * elem(&1, 1)))
     |> Enum.sum()
   end
 
-  def parse(input) do
-    input
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
-      [hand, number] = String.split(line, " ", trim: true)
-
-      {hand, String.to_integer(number)}
-    end)
-    |> Map.new()
+  defp card_order(part) do
+    case part do
+      1 -> ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
+      2 -> ["J", "2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A"]
+    end
   end
 end

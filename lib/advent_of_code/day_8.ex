@@ -53,11 +53,8 @@ defmodule AdventOfCode.Day8 do
      end)}
   end
 
-  def gcd(x, 0), do: x
-  def gcd(x, y), do: gcd(y, rem(x, y))
-
   def lcm(x, y) when is_integer(y) do
-    Integer.floor_div(x * y, gcd(x, y))
+    div(x * y, Integer.gcd(x, y))
   end
 
   def lcm(x, [head | tail]) do

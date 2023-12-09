@@ -1,7 +1,7 @@
 defmodule AdventOfCode.Day9 do
   @moduledoc false
 
-  def solve(input, opts) do
+  def solve(input, part: part) do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
@@ -26,7 +26,7 @@ defmodule AdventOfCode.Day9 do
       end)
       |> Enum.reverse()
       |> Enum.reduce(0, fn sequence, acc ->
-        case Keyword.get(opts, :part) do
+        case part do
           1 -> acc + List.last(sequence)
           2 -> List.first(sequence) - acc
         end

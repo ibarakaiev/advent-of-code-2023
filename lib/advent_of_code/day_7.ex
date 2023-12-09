@@ -1,8 +1,8 @@
 defmodule AdventOfCode.Day7 do
   @moduledoc false
 
-  def solve(input, opts) do
-    card_strength = opts |> Keyword.get(:part) |> card_order() |> Enum.with_index() |> Map.new()
+  def solve(input, part: part) do
+    card_strength = part |> card_order() |> Enum.with_index() |> Map.new()
 
     kind_strength =
       [:high_card, :one_pair, :two_pair, :three_of_a_kind, :full_house, :four_of_a_kind, :five_of_a_kind]
@@ -19,7 +19,7 @@ defmodule AdventOfCode.Day7 do
       graphemes = String.graphemes(hand)
 
       frequencies =
-        case Keyword.get(opts, :part) do
+        case part do
           1 ->
             Enum.frequencies(graphemes)
 

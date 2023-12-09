@@ -1,8 +1,8 @@
 defmodule AdventOfCode.Day3 do
   @moduledoc false
 
-  def solve(input, opts) do
-    case Keyword.get(opts, :part) do
+  def solve(input, part: part) do
+    case part do
       1 ->
         {zipped, line_length} = common(input)
 

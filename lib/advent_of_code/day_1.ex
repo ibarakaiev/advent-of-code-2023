@@ -1,12 +1,12 @@
 defmodule AdventOfCode.Day1 do
   @moduledoc false
 
-  def solve(input, opts) do
+  def solve(input, part: part) do
     input
     |> String.split("\n", trim: true)
     |> Stream.map(fn line ->
       case_result =
-        case Keyword.get(opts, :part) do
+        case part do
           1 -> ~r/\d/
           2 -> ~r/one|two|three|four|five|six|seven|eight|nine|\d/
         end

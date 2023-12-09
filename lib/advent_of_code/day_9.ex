@@ -5,23 +5,15 @@ defmodule AdventOfCode.Day9 do
     input
     |> String.split("\n", trim: true)
     |> Stream.map(fn line ->
-      sequence = line |> String.split(" ") |> Enum.map(&String.to_integer(&1))
-
-      0
-      |> Stream.iterate(&(&1 + 1))
-      |> Enum.reduce_while([sequence], fn _, acc ->
-        last_sequence = List.last(acc)
-
-        if Enum.all?(last_sequence, &(&1 == 0)) do
-          {:halt, acc}
-        else
-          {:cont,
-           acc ++
-             [
-               last_sequence
-               |> Enum.chunk_every(2, 1, :discard)
-               |> Enum.map(fn [a, b] -> b - a end)
-             ]}
+      line
+      |> String.split(" ")
+      |> Enum.map(&String.to_integer(&1))
+      |> Stream.unfold(fn sequence ->
+        unless Enum.all?(sequence, &(&1 == 0)) do
+          {sequence,
+           sequence
+           |> Stream.chunk_every(2, 1, :discard)
+           |> Enum.map(fn [a, b] -> b - a end)}
         end
       end)
       |> Enum.reverse()

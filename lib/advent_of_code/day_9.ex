@@ -4,7 +4,7 @@ defmodule AdventOfCode.Day9 do
   def solve(input, part: part) do
     input
     |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
+    |> Stream.map(fn line ->
       sequence = line |> String.split(" ") |> Enum.map(&String.to_integer(&1))
 
       0

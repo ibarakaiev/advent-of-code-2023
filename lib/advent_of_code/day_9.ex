@@ -12,7 +12,7 @@ defmodule AdventOfCode.Day9 do
       |> Enum.reduce_while([sequence], fn _, acc ->
         last_sequence = List.last(acc)
 
-        if(Enum.all?(last_sequence, &(&1 == 0))) do
+        if Enum.all?(last_sequence, &(&1 == 0)) do
           {:halt, acc}
         else
           {:cont,

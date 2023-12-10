@@ -107,7 +107,7 @@ defmodule AdventOfCode.Day10 do
 
     # cast a horizontal ray for each row
     updated_map
-    |> Enum.map(fn row ->
+    |> Stream.map(fn row ->
       row = Tuple.to_list(row)
 
       %{inside: _, inner_points_count: inner_points_count, opener: _} =

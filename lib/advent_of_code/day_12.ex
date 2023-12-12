@@ -31,41 +31,29 @@ defmodule AdventOfCode.Day12 do
             }
         end
 
-      table_name = String.to_atom("line_#{i}")
-      :ets.new(table_name, [:set, :named_table, :public])
-      total_arrangements(sequence, counts, 1, table_name)
+      total_arrangements(sequence, counts, 1)
     end)
     |> Enum.reduce(0, fn {:ok, total}, acc -> acc + total end)
   end
 
-  defp total_arrangements(sequence, counts, acc, table_name, inside? \\ false)
+  defp total_arrangements(sequence, counts, acc, inside? \\ false)
 
-  defp total_arrangements(
-         [sequence_head | sequence_tail] = sequence,
-         [count_head | count_tail] = counts,
-         acc,
-         table_name,
-         inside?
-       ) do
-    case :ets.lookup(table_name, {sequence, counts}) do
-      [{{_, _}, result}] ->
-        result
-
-      [] ->
+  defp total_arrangements([sequence_head | sequence_tail] = sequence, [count_head | count_tail] = counts, acc, inside?) do
+    case Process.get({sequence, counts}) do
+      nil ->
         if length(sequence) < length(counts) do
           # impossible to have more groups than chunks
-          memoize({sequence, counts}, 0, table_name)
+          memoize({sequence, counts}, 0)
         else
           cond do
             String.contains?(sequence_head, ".") ->
               if inside? do
                 # group is incomplete
-                memoize({sequence, counts}, 0, table_name)
+                memoize({sequence, counts}, 0)
               else
                 memoize(
                   {sequence, counts},
-                  acc * total_arrangements(sequence_tail, counts, acc, table_name, false),
-                  table_name
+                  acc * total_arrangements(sequence_tail, counts, acc, false)
                 )
               end
 
@@ -73,7 +61,7 @@ defmodule AdventOfCode.Day12 do
               cond do
                 count_head < String.length(sequence_head) ->
                   # group is incomplete
-                  memoize({sequence, counts}, 0, table_name)
+                  memoize({sequence, counts}, 0)
 
                 count_head == String.length(sequence_head) ->
                   memoize(
@@ -82,11 +70,10 @@ defmodule AdventOfCode.Day12 do
                       # need to skip to ensure no two groups merge
                       # (note that it's not possible for the next chunk to contain '#'
                       # because of how the input is parsed)
-                      acc * total_arrangements(tl(sequence_tail), count_tail, acc, table_name)
+                      acc * total_arrangements(tl(sequence_tail), count_tail, acc)
                     else
                       acc
-                    end,
-                    table_name
+                    end
                   )
 
                 count_head > String.length(sequence_head) ->
@@ -98,13 +85,11 @@ defmodule AdventOfCode.Day12 do
                           sequence_tail,
                           [count_head - String.length(sequence_head) | count_tail],
                           acc,
-                          table_name,
                           true
                         )
                     else
                       0
-                    end,
-                    table_name
+                    end
                   )
               end
 
@@ -126,17 +111,17 @@ defmodule AdventOfCode.Day12 do
 
                     String.contains?(next_chunk, "?") and count_head == 1 ->
                       # have to skip one, otherwise two groups will merge
-                      total_arrangements(tl(sequence_tail), count_tail, acc, table_name, false)
+                      total_arrangements(tl(sequence_tail), count_tail, acc, false)
 
                     count_head == 1 ->
                       if length(sequence_tail) > 0 do
-                        total_arrangements(tl(sequence_tail), count_tail, acc, table_name, false)
+                        total_arrangements(tl(sequence_tail), count_tail, acc, false)
                       else
                         acc
                       end
 
                     true ->
-                      total_arrangements(sequence_tail, [count_head - 1 | count_tail], acc, table_name, true)
+                      total_arrangements(sequence_tail, [count_head - 1 | count_tail], acc, true)
                   end
                 else
                   if count_head == 1 do
@@ -151,19 +136,22 @@ defmodule AdventOfCode.Day12 do
                   # can't skip if inside a group
                   0
                 else
-                  total_arrangements(sequence_tail, counts, acc, table_name, inside?)
+                  total_arrangements(sequence_tail, counts, acc, inside?)
                 end
 
-              memoize({sequence, counts}, acc * (count_if_skipped + count_if_filled), table_name)
+              memoize({sequence, counts}, acc * (count_if_skipped + count_if_filled))
           end
         end
+
+      result ->
+        result
     end
   end
 
-  defp total_arrangements([], [], _acc, _table_name, _inside?), do: 1
-  defp total_arrangements([], _counts, _table_name, _acc, _inside?), do: 0
+  defp total_arrangements([], [], _acc, _inside?), do: 1
+  defp total_arrangements([], _counts, _acc, _inside?), do: 0
 
-  defp total_arrangements(sequence, [], _table_name, _acc, _inside?) do
+  defp total_arrangements(sequence, [], _acc, _inside?) do
     if Enum.any?(sequence, &String.contains?(&1, "#")) do
       0
     else
@@ -171,9 +159,8 @@ defmodule AdventOfCode.Day12 do
     end
   end
 
-  defp memoize({sequence, counts}, total, table_name) do
-    :ets.insert(table_name, {{sequence, counts}, total})
-
+  defp memoize({sequence, counts}, total) do
+    Process.put({sequence, counts}, total)
     total
   end
 end

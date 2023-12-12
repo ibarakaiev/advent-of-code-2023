@@ -15,4 +15,8 @@ defmodule AdventOfCode.Day12Test do
   test "part 1" do
     assert AdventOfCode.Day12.solve(@input, part: 1) == 21
   end
+
+  test "part 2" do
+    assert AdventOfCode.Day12.solve(@input, part: 2) == 525_152
+  end
 end

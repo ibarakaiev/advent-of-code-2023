@@ -99,8 +99,6 @@ defmodule AdventOfCode.Day13 do
           100 * (left_end + 1)
       end
     end)
-
-    # if no horizontal matches, must have a vertical match
   end
 
   # returns i.e. [{{0, 0}, {1, 1}}, {{0, 1}, {2, 3}}, {{0, 2}, {3, 5}}, {{0, 3}, {4, 7}}, {{1, 4}, {5, 8}}, {{3, 5}, {6, 8}}]

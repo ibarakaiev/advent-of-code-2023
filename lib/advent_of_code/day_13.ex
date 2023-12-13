@@ -3,7 +3,81 @@ defmodule AdventOfCode.Day13 do
   def solve(input, part: 1) do
     input
     |> String.split("\n\n", trim: true)
-    |> Enum.map(fn pattern ->
+    |> find_reflections()
+    |> Enum.sum()
+  end
+
+  def solve(input, part: 2) do
+    patterns =
+      String.split(input, "\n\n", trim: true)
+
+    reflections =
+      find_reflections(patterns)
+
+    patterns
+    |> Enum.zip(reflections)
+    |> Enum.map(fn {pattern, reflection} ->
+      lines = String.split(pattern, "\n", trim: true)
+
+      height = length(lines)
+      width = String.length(List.first(lines))
+
+      for_result =
+        for i <- 0..(height - 1) do
+          for j <- 0..(width - 1) do
+            lines =
+              replace_char_in_list(lines, i, j, if(String.at(Enum.at(lines, i), j) == "#", do: ".", else: "#"))
+
+            new_reflection =
+              case find_mirrors(lines, width) do
+                [] ->
+                  nil
+
+                matches ->
+                  for_result =
+                    for {{_, left_end}, {_, _}} <- matches do
+                      unless reflection == left_end + 1 do
+                        left_end + 1
+                      end
+                    end
+
+                  for_result |> Enum.reject(&is_nil(&1)) |> List.first()
+              end
+
+            if new_reflection do
+              new_reflection
+            else
+              vertical_lines =
+                lines
+                |> Enum.map(&String.graphemes(&1))
+                |> List.zip()
+                |> Enum.map(fn tuple -> tuple |> Tuple.to_list() |> Enum.join("") end)
+
+              case find_mirrors(vertical_lines, height) do
+                [] ->
+                  nil
+
+                matches ->
+                  for_result =
+                    for {{_, left_end}, {_, _}} <- matches do
+                      unless reflection == 100 * (left_end + 1) do
+                        100 * (left_end + 1)
+                      end
+                    end
+
+                  for_result |> Enum.reject(&is_nil(&1)) |> List.first()
+              end
+            end
+          end
+        end
+
+      for_result |> List.flatten() |> Enum.reject(&is_nil(&1)) |> List.first()
+    end)
+    |> Enum.sum()
+  end
+
+  defp find_reflections(patterns) do
+    Enum.map(patterns, fn pattern ->
       lines = String.split(pattern, "\n", trim: true)
 
       height = length(lines)
@@ -20,13 +94,13 @@ defmodule AdventOfCode.Day13 do
             |> List.zip()
             |> Enum.map(fn tuple -> tuple |> Tuple.to_list() |> Enum.join("") end)
 
-          # if no horizontal matches, must have a vertical match
           [{{_, left_end}, {_, _}}] = find_mirrors(vertical_lines, height)
 
           100 * (left_end + 1)
       end
     end)
-    |> Enum.sum()
+
+    # if no horizontal matches, must have a vertical match
   end
 
   # returns i.e. [{{0, 0}, {1, 1}}, {{0, 1}, {2, 3}}, {{0, 2}, {3, 5}}, {{0, 3}, {4, 7}}, {{1, 4}, {5, 8}}, {{3, 5}, {6, 8}}]
@@ -63,5 +137,23 @@ defmodule AdventOfCode.Day13 do
       end
 
     MapSet.to_list(for_result)
+  end
+
+  def replace_char_at(str, index, new_char) do
+    pre = String.slice(str, 0, index)
+    post = String.slice(str, index + 1, String.length(str) - index)
+    pre <> new_char <> post
+  end
+
+  def replace_char_in_list(list, str_index, char_index, new_char) do
+    list
+    |> Enum.with_index()
+    |> Enum.map(fn
+      {str, index} when index == str_index ->
+        replace_char_at(str, char_index, new_char)
+
+      {str, _index} ->
+        str
+    end)
   end
 end

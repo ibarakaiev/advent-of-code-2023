@@ -4,8 +4,7 @@ defmodule AdventOfCode.Day12 do
   def solve(input, part: part) do
     input
     |> String.split("\n", trim: true)
-    |> Enum.with_index()
-    |> Task.async_stream(fn {line, i} ->
+    |> Task.async_stream(fn line ->
       [row, counts] = String.split(line, " ", trim: true, parts: 2)
 
       sequence =

@@ -1,6 +1,6 @@
 defmodule AdventOfCode.Day17 do
   @moduledoc false
-  def solve(input, part: 1) do
+  def solve(input, part: part) do
     grid =
       input
       |> String.split("\n", trim: true)
@@ -60,7 +60,7 @@ defmodule AdventOfCode.Day17 do
         PriorityQueue.push(priority_queue, key, value)
       end)
 
-    %{distances: distances, path: _path} =
+    %{distances: distances, path: path} =
       1
       |> Stream.iterate(&(&1 + 1))
       |> Enum.reduce_while(
@@ -81,37 +81,40 @@ defmodule AdventOfCode.Day17 do
             :empty ->
               {:halt, acc}
 
-            {:value, %{node: current, direction: direction, steps: steps}} ->
+            {:value, %{node: current, direction: current_direction, steps: current_steps}} ->
               {:cont,
                for {neighbor, distance} <- graph[current],
                    reduce: %{path: path, distances: distances, priority_queue: priority_queue} do
                  %{path: path, distances: distances, priority_queue: priority_queue} = acc ->
                    neighbor_direction = get_direction(current, neighbor)
-                   new_distance = distances[%{node: current, direction: direction, steps: steps}] + distance
-                   new_steps = if(neighbor_direction == direction, do: steps + 1, else: 1)
 
-                   if new_distance < distances[%{node: neighbor, direction: neighbor_direction, steps: new_steps}] and
-                        not opposite?(direction, neighbor_direction) do
-                     new_path = Map.put(path, {neighbor, neighbor_direction}, {current, direction})
+                   new_distance =
+                     distances[%{node: current, direction: current_direction, steps: current_steps}] + distance
 
-                     if new_steps == 4 do
-                       acc
-                     else
+                   neighbor_steps = if(neighbor_direction == current_direction, do: current_steps + 1, else: 1)
+
+                   if new_distance < distances[%{node: neighbor, direction: neighbor_direction, steps: neighbor_steps}] and
+                        not opposite?(current_direction, neighbor_direction) do
+                     if (part == 1 and neighbor_steps <= 3) or
+                          (part == 2 and current_direction != neighbor_direction and current_steps >= 4) or
+                          (part == 2 and current_direction == neighbor_direction and neighbor_steps <= 10) do
                        %{
-                         path: new_path,
+                         path: Map.put(path, {neighbor, neighbor_direction}, {current, current_direction}),
                          distances:
                            Map.put(
                              distances,
-                             %{node: neighbor, direction: neighbor_direction, steps: new_steps},
+                             %{node: neighbor, direction: neighbor_direction, steps: neighbor_steps},
                              new_distance
                            ),
                          priority_queue:
                            PriorityQueue.push(
                              priority_queue,
-                             %{node: neighbor, direction: neighbor_direction, steps: new_steps},
+                             %{node: neighbor, direction: neighbor_direction, steps: neighbor_steps},
                              new_distance
                            )
                        }
+                     else
+                       acc
                      end
                    else
                      acc
@@ -122,8 +125,18 @@ defmodule AdventOfCode.Day17 do
       )
 
     Enum.reduce([:L, :D, :R, :U], 1_000_000, fn direction, acc ->
-      Enum.reduce(0..3, acc, fn steps, acc ->
-        min(acc, distances[%{node: {width - 1, height - 1}, direction: direction, steps: steps}])
+      Enum.reduce(0..max(width, height), acc, fn steps, acc ->
+        case part do
+          1 ->
+            min(acc, distances[%{node: {width - 1, height - 1}, direction: direction, steps: steps}] || 1_000_000)
+
+          2 ->
+            if steps >= 4 do
+              min(acc, distances[%{node: {width - 1, height - 1}, direction: direction, steps: steps}] || 1_000_000)
+            else
+              acc
+            end
+        end
       end)
     end)
   end

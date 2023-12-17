@@ -22,4 +22,21 @@ defmodule AdventOfCode.Day17Test do
   test "part 1" do
     assert AdventOfCode.Day17.solve(@input, part: 1) == 102
   end
+
+  test "part 2 (example 1)" do
+    assert AdventOfCode.Day17.solve(@input, part: 2) == 94
+  end
+
+  test "part 2 (example 2)" do
+    assert AdventOfCode.Day17.solve(
+             """
+             111111111111
+             999999999991
+             999999999991
+             999999999991
+             999999999991
+             """,
+             part: 2
+           ) == 71
+  end
 end

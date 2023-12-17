@@ -60,7 +60,7 @@ defmodule AdventOfCode.Day17 do
         PriorityQueue.push(priority_queue, key, value)
       end)
 
-    %{distances: distances, path: path} =
+    %{distances: distances, path: _path} =
       1
       |> Stream.iterate(&(&1 + 1))
       |> Enum.reduce_while(

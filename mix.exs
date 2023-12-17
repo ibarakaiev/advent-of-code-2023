@@ -23,7 +23,8 @@ defmodule AdventOfCode2023.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:styler, "~> 0.10", only: [:dev, :test], runtime: false}
+      {:styler, "~> 0.10", only: [:dev, :test], runtime: false},
+      {:libgraph, "~> 0.16.0"}
     ]
   end
 end

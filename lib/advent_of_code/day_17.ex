@@ -37,28 +37,12 @@ defmodule AdventOfCode.Day17 do
           end
       end
 
-    distances =
-      Enum.reduce(graph, Map.new(), fn {_k, v}, acc ->
-        for {node, _distance} <- v, reduce: acc do
-          acc ->
-            Enum.reduce([:L, :D, :R, :U], acc, fn direction, acc ->
-              Enum.reduce(0..3, acc, fn steps, acc ->
-                Map.put(
-                  acc,
-                  %{node: node, direction: direction, steps: steps},
-                  if(node == {0, 0}, do: 0, else: 1_000_000)
-                )
-              end)
-            end)
-        end
-      end)
+    distances = %{
+      %{node: {0, 0}, direction: :R, steps: 0} => 0
+    }
 
     priority_queue =
-      distances
-      |> Enum.reject(fn {%{steps: steps}, v} -> v != 0 or steps != 0 end)
-      |> Enum.reduce(PriorityQueue.new(), fn {key, value}, priority_queue ->
-        PriorityQueue.push(priority_queue, key, value)
-      end)
+      PriorityQueue.push(PriorityQueue.new(), %{node: {0, 0}, direction: :R, steps: 0}, 0)
 
     %{distances: distances, path: _path} =
       1

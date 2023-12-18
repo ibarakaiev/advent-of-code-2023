@@ -36,12 +36,13 @@ defmodule AdventOfCode.Day18 do
         end
       end)
 
-    %{corners: corners} =
+    %{corners: corners, outline: outline} =
       [List.last(instructions) | instructions]
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.reduce(
-        %{coordinates: {0, 0}, corners: []},
-        fn [{_prev_length, prev_direction}, {curr_length, curr_direction}], %{coordinates: {x, y}, corners: corners} ->
+        %{coordinates: {0, 0}, corners: [], outline: 0},
+        fn [{_prev_length, prev_direction}, {curr_length, curr_direction}],
+           %{coordinates: {x, y}, corners: corners, outline: outline} ->
           corner =
             case {direction_as_letter(prev_direction), direction_as_letter(curr_direction)} do
               {"L", "U"} -> "L"
@@ -56,48 +57,102 @@ defmodule AdventOfCode.Day18 do
 
           %{
             coordinates: {x + elem(curr_direction, 0) * curr_length, y + elem(curr_direction, 1) * curr_length},
-            corners: [{x, y, corner} | corners]
+            corners: [{x, y, corner} | corners],
+            outline: abs(elem(curr_direction, 0) * curr_length) + abs(elem(curr_direction, 1) * curr_length) + outline
           }
         end
       )
 
-    sorted_y_corners_pairs =
+    {_, area} =
       corners
       |> Enum.group_by(fn {_, y, _} -> y end)
       |> Enum.map(fn {y, corners} ->
         {
           y,
-          Enum.sort(corners, fn {x_left, _, _}, {x_right, _, _} ->
-            x_left <= x_right
-          end)
+          Enum.map(corners, fn {x, _y, symbol} -> {x, symbol} end)
         }
       end)
       |> Enum.sort(fn {y_left, _}, {y_right, _} ->
         y_left <= y_right
       end)
-      |> dbg()
       |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.reduce(
+        {%{}, 0},
+        fn [{current_y, current_corners}, {next_y, _next_corners}], {current_line, acc} ->
+          corners_with_vertical_edges =
+            current_line
+            |> Map.merge(Map.new(current_corners))
+            |> Enum.sort(fn {x_left, _}, {x_right, _} -> x_left <= x_right end)
 
-    # F.....7   #######
-    # .......   #.....#
-    # L.7....   ###...#
-    # .......   ..#...#
-    # .......   ..#...#
-    # F.J.F.J   ###.###
-    # .......   #...#..
-    # L7..L.7   ##..###
-    # .......   .#....#
-    # .L....J   .######
+          %{total: area_on_the_corner_line} =
+            Enum.reduce(
+              corners_with_vertical_edges,
+              %{inside: false, total: 0, opener: "", prev_x: 0},
+              fn {x, corner}, %{inside: inside, total: total, opener: opener, prev_x: prev_x} = acc ->
+                acc =
+                  case corner do
+                    "L" ->
+                      %{acc | opener: "L"}
 
-    # ..F..7    ..####
-    # ......    ..####
-    # F.J...    ######
-    # L....J    ######
+                    "F" ->
+                      %{acc | opener: "F"}
 
-    # ..F..7..  ..####..
-    # ........  ..####..
-    # F.J..L.7  ########
-    # L......J  ########
+                    "7" ->
+                      if opener == "F" do
+                        %{acc | opener: ""}
+                      else
+                        %{acc | opener: "", inside: !inside}
+                      end
+
+                    "J" ->
+                      if opener == "L" do
+                        %{acc | opener: ""}
+                      else
+                        %{acc | opener: "", inside: !inside}
+                      end
+
+                    "|" ->
+                      %{acc | inside: !inside}
+                  end
+
+                if inside and opener != "F" and opener != "L" do
+                  %{acc | total: total + x - prev_x - 1, prev_x: x}
+                else
+                  %{acc | prev_x: x}
+                end
+              end
+            )
+
+          # construct a new line for the empty lines, based on the previous empty line and the current line
+          updates =
+            Map.new(
+              for {x, corner} <- current_corners do
+                case corner do
+                  "F" -> {x, "|"}
+                  "7" -> {x, "|"}
+                  "J" -> if current_line[x] == "|", do: {x, "X"}, else: {x, "|"}
+                  "L" -> if current_line[x] == "|", do: {x, "X"}, else: {x, "|"}
+                end
+              end
+            )
+
+          updated_line =
+            current_line
+            |> Map.merge(updates)
+            |> Enum.reject(fn {_k, v} -> v == "X" end)
+            |> Enum.sort(fn {k_left, _v_left}, {k_right, _v_right} -> k_left < k_right end)
+
+          area_on_an_empty_line =
+            updated_line
+            |> Enum.chunk_every(2, 2)
+            |> Enum.map(fn [{x_left, _}, {x_right, _}] -> x_right - x_left - 1 end)
+            |> Enum.sum()
+
+          {Map.new(updated_line), acc + area_on_the_corner_line + (next_y - current_y - 1) * area_on_an_empty_line}
+        end
+      )
+
+    area + outline
   end
 
   defp direction_as_letter({offset_x, offset_y}) do

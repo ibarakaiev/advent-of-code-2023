@@ -1,108 +1,111 @@
 defmodule AdventOfCode.Day18 do
   @moduledoc false
   def solve(input, part: part) do
-    %{grid: grid} =
+    instructions =
       input
       |> String.split("\n", trim: true)
-      |> Enum.reduce(
-        %{grid: MapSet.new([{0, 0}]), coordinates: {0, 0}},
-        fn row, %{grid: grid, coordinates: {current_x, current_y}} ->
-          [direction | [length | [hex]]] = String.split(row, " ", trim: true)
+      |> Enum.map(fn row ->
+        [direction | [length | [hex]]] = String.split(row, " ", trim: true)
 
-          {length, direction} =
-            case part do
-              1 ->
-                length = String.to_integer(length)
+        case part do
+          1 ->
+            length = String.to_integer(length)
 
-                direction =
-                  case direction do
-                    "L" -> {-1, 0}
-                    "D" -> {0, 1}
-                    "R" -> {1, 0}
-                    "U" -> {0, -1}
-                  end
-
-                {length, direction}
-
-              2 ->
-                dbg(hex)
-                {length, _} = Integer.parse(String.slice(hex, 2..(String.length(hex) - 3)), 16)
-
-                direction =
-                  case Integer.parse(String.slice(hex, (String.length(hex) - 2)..(String.length(hex) - 2)), 16) do
-                    {0, _} -> {1, 0}
-                    {1, _} -> {0, 1}
-                    {2, _} -> {-1, 0}
-                    {3, _} -> {0, -1}
-                  end
-
-                {length, direction}
-            end
-
-          Enum.reduce(
-            1..length,
-            %{grid: grid, coordinates: {current_x, current_y}},
-            fn _offset, %{grid: grid, coordinates: {current_x, current_y}} ->
-              new_coordinates = {current_x + elem(direction, 0), current_y + elem(direction, 1)}
-
-              %{grid: MapSet.put(grid, new_coordinates), coordinates: new_coordinates}
-            end
-          )
-        end
-      )
-
-    {{min_x, min_y}, {max_x, max_y}} =
-      grid
-      |> MapSet.to_list()
-      |> Enum.reduce(
-        {{100_000_000, 100_000_000}, {-100_000_000, -100_000_000}},
-        fn {x, y}, {{min_x, min_y}, {max_x, max_y}} ->
-          {{min(min_x, x), min(min_y, y)}, {max(max_x, x), max(max_y, y)}}
-        end
-      )
-
-    for y <- min_y..max_y, reduce: 0 do
-      total ->
-        %{total: row_total} =
-          for x <- min_x..max_x, reduce: %{total: 0, inside: false, opener: ""} do
-            %{total: total, inside: inside, opener: opener} = acc ->
-              if MapSet.member?(grid, {x, y}) do
-                acc = %{acc | total: total + 1}
-
-                case {MapSet.member?(grid, {x - 1, y}), MapSet.member?(grid, {x, y + 1}),
-                      MapSet.member?(grid, {x + 1, y}), MapSet.member?(grid, {x, y - 1})} do
-                  # 7
-                  {true, true, false, false} ->
-                    if opener == "F", do: %{acc | opener: ""}, else: %{acc | opener: "", inside: !inside}
-
-                  # -
-                  {true, false, true, false} ->
-                    acc
-
-                  # J
-                  {true, false, false, true} ->
-                    if opener == "L", do: %{acc | opener: ""}, else: %{acc | opener: "", inside: !inside}
-
-                  # |
-                  {false, true, false, true} ->
-                    %{acc | inside: !inside}
-
-                  # F
-                  {false, true, true, false} ->
-                    %{acc | opener: "F"}
-
-                  # L
-                  {false, false, true, true} ->
-                    %{acc | opener: "L"}
-                end
-              else
-                if inside,
-                  do: %{acc | total: total + 1},
-                  else: acc
+            direction =
+              case direction do
+                "L" -> {-1, 0}
+                "D" -> {0, 1}
+                "R" -> {1, 0}
+                "U" -> {0, -1}
               end
-          end
 
-        total + row_total
+            {length, direction}
+
+          2 ->
+            {length, _} = Integer.parse(String.slice(hex, 2..(String.length(hex) - 3)), 16)
+
+            direction =
+              case Integer.parse(String.slice(hex, (String.length(hex) - 2)..(String.length(hex) - 2)), 16) do
+                {0, _} -> {1, 0}
+                {1, _} -> {0, 1}
+                {2, _} -> {-1, 0}
+                {3, _} -> {0, -1}
+              end
+
+            {length, direction}
+        end
+      end)
+
+    %{corners: corners} =
+      [List.last(instructions) | instructions]
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.reduce(
+        %{coordinates: {0, 0}, corners: []},
+        fn [{_prev_length, prev_direction}, {curr_length, curr_direction}], %{coordinates: {x, y}, corners: corners} ->
+          corner =
+            case {direction_as_letter(prev_direction), direction_as_letter(curr_direction)} do
+              {"L", "U"} -> "L"
+              {"L", "D"} -> "F"
+              {"R", "U"} -> "J"
+              {"R", "D"} -> "7"
+              {"U", "R"} -> "F"
+              {"U", "L"} -> "7"
+              {"D", "R"} -> "L"
+              {"D", "L"} -> "J"
+            end
+
+          %{
+            coordinates: {x + elem(curr_direction, 0) * curr_length, y + elem(curr_direction, 1) * curr_length},
+            corners: [{x, y, corner} | corners]
+          }
+        end
+      )
+
+    sorted_y_corners_pairs =
+      corners
+      |> Enum.group_by(fn {_, y, _} -> y end)
+      |> Enum.map(fn {y, corners} ->
+        {
+          y,
+          Enum.sort(corners, fn {x_left, _, _}, {x_right, _, _} ->
+            x_left <= x_right
+          end)
+        }
+      end)
+      |> Enum.sort(fn {y_left, _}, {y_right, _} ->
+        y_left <= y_right
+      end)
+      |> dbg()
+      |> Enum.chunk_every(2, 1, :discard)
+
+    # F.....7   #######
+    # .......   #.....#
+    # L.7....   ###...#
+    # .......   ..#...#
+    # .......   ..#...#
+    # F.J.F.J   ###.###
+    # .......   #...#..
+    # L7..L.7   ##..###
+    # .......   .#....#
+    # .L....J   .######
+
+    # ..F..7    ..####
+    # ......    ..####
+    # F.J...    ######
+    # L....J    ######
+
+    # ..F..7..  ..####..
+    # ........  ..####..
+    # F.J..L.7  ########
+    # L......J  ########
+  end
+
+  defp direction_as_letter({offset_x, offset_y}) do
+    case {offset_x, offset_y} do
+      {-1, 0} -> "L"
+      {0, 1} -> "D"
+      {1, 0} -> "R"
+      {0, -1} -> "U"
     end
   end
 end

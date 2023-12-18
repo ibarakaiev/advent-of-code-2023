@@ -23,4 +23,8 @@ defmodule AdventOfCode.Day18Test do
   test "part 1" do
     assert AdventOfCode.Day18.solve(@input, part: 1) == 62
   end
+
+  test "part 2" do
+    assert AdventOfCode.Day18.solve(@input, part: 2) == 952_408_144_115
+  end
 end

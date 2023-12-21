@@ -1,11 +1,11 @@
 defmodule AdventOfCode.Day20 do
   @moduledoc false
-  def solve(input, part: 1, max: max) do
+  def solve(input, part: 1) do
     circuit = parse(input)
 
-    %{total_low_pulses: total_low_pulses, total_high_pulses: total_high_pulses, circuit: circuit} =
+    %{total_low_pulses: total_low_pulses, total_high_pulses: total_high_pulses} =
       Enum.reduce(
-        1..max,
+        1..1000,
         %{total_low_pulses: 0, total_high_pulses: 0, circuit: circuit},
         fn _, %{total_low_pulses: total_low_pulses, total_high_pulses: total_high_pulses, circuit: circuit} ->
           %{circuit: circuit, total_low_pulses: additional_low_pulses, total_high_pulses: additional_high_pulses} =

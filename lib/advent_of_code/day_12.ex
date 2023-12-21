@@ -25,7 +25,7 @@ defmodule AdventOfCode.Day12 do
 
           2 ->
             {
-              (sequence ++ ["?"]) |> List.duplicate(5) |> List.flatten() |> Enum.drop(-1),
+              [sequence] |> List.duplicate(5) |> Enum.intersperse("?") |> List.flatten(),
               counts |> List.duplicate(5) |> List.flatten()
             }
         end
